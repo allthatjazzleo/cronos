@@ -165,3 +165,5 @@ replace github.com/ethereum/go-ethereum => github.com/crypto-org-chain/go-ethere
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.44.2
 
 replace github.com/tharsis/ethermint => github.com/yihuang/ethermint v0.6.1-0.20211228113745-556446db72eb
+
+replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v1.1.1
