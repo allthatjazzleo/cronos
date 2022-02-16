@@ -6,14 +6,17 @@ GOPATH ?= $(shell $(GO) env GOPATH)
 BINDIR ?= ~/go/bin
 NETWORK ?= mainnet
 LEDGER_ENABLED ?= true
+VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
+COMMIT := $(shell git log -1 --format='%H')
 
 TESTNET_FLAGS ?=
 
-BUILD_TAGS := -tags
+# process build tags
+build_tags = netgo
 ifeq ($(NETWORK),mainnet)
-    BUILD_TAGS := $(BUILD_TAGS) mainnet
+    build_tags += mainnet
 else ifeq ($(NETWORK),testnet)
-    BUILD_TAGS := $(BUILD_TAGS) testnet
+    build_tags += testnet
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
@@ -22,7 +25,7 @@ ifeq ($(LEDGER_ENABLED),true)
         ifeq ($(GCCEXE),)
             $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
         else
-            BUILD_TAGS := $(BUILD_TAGS),ledger
+            build_tags += ledger
         endif
     else
         UNAME_S = $(shell uname -s)
@@ -33,18 +36,58 @@ ifeq ($(LEDGER_ENABLED),true)
             ifeq ($(GCC),)
                 $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
             else
-                BUILD_TAGS := $(BUILD_TAGS),ledger
+                build_tags += ledger
             endif
         endif
     endif
 endif
 
+# DB backend selection
+ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+endif
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+  build_tags += badgerdb
+endif
+# handle rocksdb
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
+  $(info ################################################################)
+  $(info To use rocksdb, you need to install rocksdb first)
+  $(info Please follow this guide https://github.com/rockset/rocksdb-cloud/blob/master/INSTALL.md)
+  $(info ################################################################)
+  CGO_ENABLED=1
+  build_tags += rocksdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
+endif
+# handle boltdb
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += boltdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
+endif
+
+build_tags += $(BUILD_TAGS)
+build_tags := $(strip $(build_tags))
+
+whitespace := $(subst ,, )
+comma := ,
+build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+
+# process linker flags
+ldflags += -X github.com/cosmos/cosmos-sdk/version.Name=cronos \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=cronosd \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-X github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)
+
+BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
+
 all: build
 build: check-network print-ledger go.sum
-	@go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/cronosd ./cmd/cronosd
+	@go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/cronosd ./cmd/cronosd
 
 install: check-network print-ledger go.sum
-	@go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/cronosd
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/cronosd
 
 test:
 	@go test -v -mod=readonly $(PACKAGES) -coverprofile=$(COVERAGE) -covermode=atomic

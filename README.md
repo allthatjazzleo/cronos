@@ -57,6 +57,7 @@ and the [contributing guidelines](CONTRIBUTING.md) when submitting code.
 ## 5. Build full node
 
 ```bash
+# COSMOS_BUILD_OPTIONS=rocksdb make install
 make build
 ```
 

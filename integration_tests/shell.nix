@@ -16,5 +16,6 @@ pkgs.mkShell {
     pkgs.solc-static-versions.solc_0_6_11
     pkgs.test-env
     pkgs.nixpkgs-fmt
+    pkgs.rocksdb
   ];
 }

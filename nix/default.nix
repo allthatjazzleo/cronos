@@ -36,8 +36,13 @@ import sources.nixpkgs {
         };
       };
     })
+    (_: pkgs: { test-env = import ./testenv.nix { inherit pkgs; }; })
     (_: pkgs: {
-      test-env = import ./testenv.nix { inherit pkgs; };
+      rocksdb = pkgs.rocksdb.overrideAttrs (old: rec {
+        pname = "rocksdb";
+        version = "6.27.3";
+        src = sources.rocksdb;
+      });
     })
   ];
   config = { };
