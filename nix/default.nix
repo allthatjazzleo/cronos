@@ -4,12 +4,9 @@ let
   dapptools = {
     x86_64-linux =
       (import (sources.dapptools + "/release.nix") { }).dapphub.linux.stable;
-    aarch64-linux =
-      (import (sources.dapptools + "/release.nix") { }).dapphub.linux.stable;
     x86_64-darwin =
       (import (sources.dapptools + "/release.nix") { }).dapphub.darwin.stable;
-  }.${system} or (throw
-    "Unsupported system: ${system}");
+  }.${system} or {};
 in
 import sources.nixpkgs {
   overlays = [
