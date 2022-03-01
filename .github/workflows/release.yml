@@ -86,7 +86,7 @@ jobs:
             mkdir /etc/nix
             echo 'filter-syscalls = false' >> /etc/nix/nix.conf
             echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
-            set -o pipefail && curl -L https://nixos.org/nix/install | bash
+            set -o pipefail && sh <(curl -L https://nixos.org/nix/install) --no-daemon
             echo "source $HOME/.nix-profile/etc/profile.d/nix.sh" >> "$HOME/.bashrc"
           # Produce a binary artifact and place it in the mounted volume
           run: |
@@ -96,7 +96,7 @@ jobs:
             MAINNET_TAR="cronos_$(echo ${GITHUB_REF##*/} | cut -c 2-)-${DB}_${PLATFORM}.tar.gz"
             TESTNET_TAR="cronos_$(echo ${GITHUB_REF##*/} | cut -c 2-)-testnet-${DB}_${PLATFORM}.tar.gz"
             mkdir ./bin
-            nix bundle . --show-trace
+            nix bundle .
             mv ./cronosd ./bin
             tar cfzh "${MAINNET_TAR}" ./bin
             nix bundle .#cronosd-testnet
