@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 import web3
-from pystarport import ports
 from web3._utils.method_formatters import receipt_formatter
 from web3.datastructures import AttributeDict
 
