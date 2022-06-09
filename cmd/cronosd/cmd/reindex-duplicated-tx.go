@@ -66,7 +66,7 @@ func ReindexDuplicatedTx() *cobra.Command {
 						return err
 					}
 					if txResult == nil || indexed == nil {
-						fmt.Fprintf(os.Stderr, "%d: txResult: %v, indexed: %v", height,  txResult, indexed)
+						fmt.Fprintf(os.Stderr, "%d: txhash: %s, indexed: %v\n", height, tx.String(), indexed)
 						continue
 					}
 					if txResult.Code == 0 && txResult.Code != indexed.Result.Code {
